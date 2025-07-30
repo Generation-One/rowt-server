@@ -79,13 +79,13 @@ export class AppController {
       const link = await this.appService.findLinkByShortCode(shortCode);
       if (!link) {
         console.error('Link not found:', shortCode);
-        return response.status(307).redirect('/error');
+        return response.status(307).redirect('./error');
       }
       console.log('link project:', link.project);
 
       if (!link.project) {
         console.error('Link project not found:', shortCode);
-        return response.status(307).redirect('/error');
+        return response.status(307).redirect('./error');
       }
 
       console.log('All headers:', request.headers);
@@ -129,7 +129,7 @@ export class AppController {
 
       // Set up fallback URLs
       const regularFallback =
-        link.fallbackUrlOverride || link.project.fallbackUrl || '/error';
+        link.fallbackUrlOverride || link.project.fallbackUrl || './error';
 
       // Determine store URLs if available
       let appStoreUrl: string | null = null;
@@ -265,7 +265,7 @@ export class AppController {
       `);
     } catch (error) {
       console.error('Error in getLink:', error);
-      return response.status(307).redirect('/error');
+      return response.status(307).redirect('./error');
     }
   }
 }

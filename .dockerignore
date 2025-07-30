@@ -126,7 +126,6 @@ __tests__/
 .eslintrc*
 .prettierrc*
 jest.config.*
-tsconfig.json
 
 # Database files (SQLite)
 *.sqlite

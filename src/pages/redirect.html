@@ -111,25 +111,7 @@
         goToFallback();
       }, LONG_TIMEOUT);
 
-      // Log interaction
-      fetch(
-        '${request.protocol}://${request.headers.host}/api/interaction/log',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            shortCode: '${shortCode}',
-            userAgent: "${request.headers['user-agent']}",
-            referer:
-              "${request.headers.referer || request.headers.referrer || request.headers.origin || ''}",
-            country: "${country || ''}",
-          }),
-          // Using keepalive to ensure the request completes even if page navigates away
-          keepalive: true,
-        },
-      ).catch((err) => console.error('Error logging interaction:', err));
+      // Note: Interaction logging is handled server-side, no client-side API call needed
     </script>
   </body>
 </html>

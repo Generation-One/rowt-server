@@ -1,6 +1,6 @@
 # Multi-stage build for production-ready Rowt server
 # Stage 1: Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
@@ -8,20 +8,22 @@ RUN apk add --no-cache python3 make g++
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and configuration files
 COPY package*.json ./
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
+# Copy source code (needed for build during npm ci postinstall)
+COPY . .
 
 # Install all dependencies (including dev dependencies for build)
-RUN npm ci --only=production=false
-
-# Copy source code
-COPY . .
+RUN npm ci
 
 # Build the application
 RUN npm run build
 
 # Stage 2: Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -39,7 +41,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
