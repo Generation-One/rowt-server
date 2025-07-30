@@ -145,4 +145,4 @@ temp/
 docker-compose.override.yml
 
 # Local development files
-.env.example
+# .env.example - needed for Docker build

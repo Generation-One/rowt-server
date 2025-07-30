@@ -45,18 +45,39 @@ ROWT_TENANT_MODE=single-tenant
 
 ### 3. Deploy
 
+#### Option A: With Traefik (Recommended for Production)
 ```bash
-# Start services
+# Using the deployment script
+./deploy.sh --with-traefik
+
+# Or manually
 docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f rowt-server
 ```
 
-Your Rowt server will be available at `https://rowt.generation.one` (or your configured domain).
+#### Option B: Standalone (Without Traefik)
+```bash
+# Using the deployment script (port 3000)
+./deploy.sh --standalone
+
+# Using the deployment script (custom port)
+./deploy.sh --standalone --port 8080
+
+# Or manually
+ROWT_PORT=3000 docker-compose -f docker-compose.yml -f docker-compose.standalone.yml up -d
+```
+
+#### Windows Users
+```cmd
+REM With Traefik
+deploy.bat --with-traefik
+
+REM Standalone
+deploy.bat --standalone --port 3000
+```
+
+**Access your application:**
+- **With Traefik**: `https://rowt.generation.one` (or your configured domain)
+- **Standalone**: `http://localhost:3000` (or your configured port)
 
 ## 🔧 Configuration
 
@@ -176,12 +197,45 @@ docker-compose exec postgres pg_dump -U rowt_user rowt_db > backup.sql
 git pull origin main
 
 # Rebuild and restart
+./deploy.sh --build
+
+# Or manually
 docker-compose down
 docker-compose build --no-cache
 docker-compose up -d
 
 # Verify update
 curl https://yourdomain.com/health
+```
+
+## 🔧 Troubleshooting
+
+### Deployment Error: ".env.example not found"
+If you encounter this error during deployment:
+```
+failed to compute cache key: "/.env.example": not found
+```
+
+**Solution**: Make sure `.env.example` exists and is not excluded by `.dockerignore`:
+```bash
+# Check if file exists
+ls -la .env.example
+
+# If missing, recreate it
+git checkout .env.example
+
+# Rebuild
+docker-compose build --no-cache
+```
+
+### Port Already in Use
+If you get port conflicts:
+```bash
+# Use a different port
+./deploy.sh --standalone --port 8080
+
+# Or find what's using the port
+netstat -tulpn | grep :3000
 ```
 
 ## 📚 Documentation

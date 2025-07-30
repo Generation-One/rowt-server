@@ -2,9 +2,29 @@
 <html>
   <head>
     <title>Method Not Allowed</title>
-    <link rel="icon" href="./static/rowtfavicon.png" type="image/x-icon" />
+    <link rel="icon" href="static/rowtfavicon.png" type="image/x-icon" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // Ensure subpaths always end with trailing slash
+      (function() {
+        var currentUrl = window.location.href;
+        var pathname = window.location.pathname;
+
+        // Check if we're on a subpath (not root) and it doesn't end with /
+        if (pathname.length > 1 && !pathname.endsWith('/')) {
+          // Check if it's not a file (has no extension in the last segment)
+          var lastSegment = pathname.split('/').pop();
+          var hasExtension = lastSegment.includes('.');
+
+          if (!hasExtension) {
+            // Redirect to the same URL with trailing slash
+            var newUrl = currentUrl + '/';
+            window.location.replace(newUrl);
+          }
+        }
+      })();
+    </script>
     <style>
       body {
         font-family: Arial, sans-serif;

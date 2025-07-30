@@ -8,7 +8,9 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: rowt-server
-    # Remove direct port exposure - Traefik will handle routing
+    # Conditional port exposure based on DISABLE_TRAEFIK environment variable
+    ports:
+      - "${ROWT_PORT:-3000}:3000"
     expose:
       - "3000"
     environment:
@@ -45,17 +47,20 @@ services:
       # Enable Traefik
       - "traefik.enable=true"
 
-      # HTTP Router (will redirect to HTTPS)
-      - "traefik.http.routers.rowt-http.rule=Host(`${DOMAIN:-rowt.localhost}`)"
+      # HTTP Router (will redirect to HTTPS) - with subpath
+      - "traefik.http.routers.rowt-http.rule=Host(`localhost`) && PathPrefix(`/rowt`)"
       - "traefik.http.routers.rowt-http.entrypoints=web"
 
-      # HTTPS Router
-      - "traefik.http.routers.rowt-https.rule=Host(`${DOMAIN:-rowt.localhost}`)"
+      # HTTPS Router - with subpath
+      - "traefik.http.routers.rowt-https.rule=Host(`localhost`) && PathPrefix(`/rowt`)"
       - "traefik.http.routers.rowt-https.entrypoints=websecure"
-      - "traefik.http.routers.rowt-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.rowt-https.tls=true"
 
       # Service configuration
       - "traefik.http.services.rowt-server.loadbalancer.server.port=3000"
+
+      # Strip the /rowt prefix before forwarding to the application
+      - "traefik.http.middlewares.rowt-stripprefix.stripprefix.prefixes=/rowt"
 
       # Security headers
       - "traefik.http.middlewares.rowt-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
@@ -65,8 +70,9 @@ services:
       - "traefik.http.middlewares.rowt-headers.headers.stspreload=true"
       - "traefik.http.middlewares.rowt-headers.headers.stsseconds=31536000"
 
-      # Apply security headers to HTTPS router
-      - "traefik.http.routers.rowt-https.middlewares=rowt-headers"
+      # Apply middlewares to routers
+      - "traefik.http.routers.rowt-http.middlewares=rowt-stripprefix"
+      - "traefik.http.routers.rowt-https.middlewares=rowt-stripprefix,rowt-headers"
 
   # PostgreSQL Database
   postgres:
