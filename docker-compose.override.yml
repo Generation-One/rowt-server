@@ -1,0 +1,60 @@
+# Docker Compose Override for Development
+# This file extends docker-compose.yml for development purposes
+# Use: docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+
+version: '3.8'
+
+services:
+  rowt-server:
+    # Override build target for development
+    build:
+      target: builder
+    # Mount source code for hot reload
+    volumes:
+      - .:/app
+      - /app/node_modules
+    # Override command for development
+    command: npm run start:dev
+    # Add development environment variables
+    environment:
+      - NODE_ENV=development
+      - ROWT_DB_SSL=false
+    # Expose additional ports for debugging
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js debug port
+
+  postgres:
+    # Expose PostgreSQL port for external access during development
+    ports:
+      - "5432:5432"
+    # Add development-specific environment variables
+    environment:
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    # Mount local data directory for easier access
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./dev-data:/docker-entrypoint-initdb.d/dev-data:ro
+
+  # Add pgAdmin for database management in development
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: rowt-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@rowt.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - rowt-network
+    restart: unless-stopped
+
+volumes:
+  pgadmin-data:
+    driver: local

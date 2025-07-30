@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # Rowt Server Application
+  rowt-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: rowt-server
+    # Remove direct port exposure - Traefik will handle routing
+    expose:
+      - "3000"
+    environment:
+      # Tenant Configuration
+      - ROWT_TENANT_MODE=single-tenant
+      
+      # Database Configuration
+      - ROWT_DATABASE_URL=postgresql://rowt_user:rowt_password@postgres:5432/rowt_db
+      - ROWT_DB_TYPE=postgres
+      - ROWT_DB_SSL=false
+      
+      # Server Configuration
+      - ROWT_JWT_SECRET=${ROWT_JWT_SECRET:-4ea8a16526bea403928008fd5cb03dbbab2c9f247017c2ed}
+      - PORT=3000
+      
+      # Single Tenant Admin Configuration
+      - ROWT_ADMIN_EMAIL=${ROWT_ADMIN_EMAIL:-admin@example.com}
+      - ROWT_ADMIN_PASSWORD=${ROWT_ADMIN_PASSWORD:-skBFC[594d<tclS&s%dg}
+      - ROWT_ADMIN_UUID=${ROWT_ADMIN_UUID:-b5891abc-2c0d-452e-81a6-89c034bd64e9}
+      
+      # Optional: Node Environment
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - traefik
+      - rowt-network
+    volumes:
+      # Optional: Mount logs directory for persistence
+      - rowt-logs:/app/logs
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+
+      # HTTP Router (will redirect to HTTPS)
+      - "traefik.http.routers.rowt-http.rule=Host(`${DOMAIN:-rowt.localhost}`)"
+      - "traefik.http.routers.rowt-http.entrypoints=web"
+
+      # HTTPS Router
+      - "traefik.http.routers.rowt-https.rule=Host(`${DOMAIN:-rowt.localhost}`)"
+      - "traefik.http.routers.rowt-https.entrypoints=websecure"
+      - "traefik.http.routers.rowt-https.tls.certresolver=letsencrypt"
+
+      # Service configuration
+      - "traefik.http.services.rowt-server.loadbalancer.server.port=3000"
+
+      # Security headers
+      - "traefik.http.middlewares.rowt-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.rowt-headers.headers.customrequestheaders.X-Forwarded-For="
+      - "traefik.http.middlewares.rowt-headers.headers.sslredirect=true"
+      - "traefik.http.middlewares.rowt-headers.headers.stsincludesubdomains=true"
+      - "traefik.http.middlewares.rowt-headers.headers.stspreload=true"
+      - "traefik.http.middlewares.rowt-headers.headers.stsseconds=31536000"
+
+      # Apply security headers to HTTPS router
+      - "traefik.http.routers.rowt-https.middlewares=rowt-headers"
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: rowt-postgres
+    environment:
+      - POSTGRES_USER=rowt_user
+      - POSTGRES_PASSWORD=rowt_password
+      - POSTGRES_DB=rowt_db
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      # Expose PostgreSQL port for external access (optional, remove in production)
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - rowt-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rowt_user -d rowt_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Optional: Redis for caching (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: rowt-redis
+  #   restart: unless-stopped
+  #   networks:
+  #     - rowt-network
+  #   volumes:
+  #     - redis-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+
+  # Optional: Nginx reverse proxy (uncomment for production)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: rowt-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - rowt-server
+  #   restart: unless-stopped
+  #   networks:
+  #     - rowt-network
+
+# Named volumes for data persistence
+volumes:
+  postgres-data:
+    driver: local
+  rowt-logs:
+    driver: local
+  # redis-data:
+  #   driver: local
+
+# Networks
+networks:
+  # External Traefik network (assumes Traefik is already running)
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
+
+  # Internal network for service communication
+  rowt-network:
+    driver: bridge
