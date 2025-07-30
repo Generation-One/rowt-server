@@ -1,0 +1,82 @@
+version: '3.8'
+
+# Optional Traefik setup for users who don't have Traefik running
+# This is a minimal Traefik configuration for development and production use
+# 
+# To use this file:
+# 1. Run: docker-compose -f docker-compose.traefik.yml up -d
+# 2. Then run your main application: ./start.sh start
+#
+# For production, make sure to:
+# - Set your real domain in DOMAIN environment variable
+# - Set your real email in ACME_EMAIL environment variable
+# - Ensure ports 80 and 443 are available
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      # HTTP port
+      - "80:80"
+      # HTTPS port  
+      - "443:443"
+      # Traefik dashboard (optional, remove in production)
+      - "8080:8080"
+    environment:
+      # Let's Encrypt email for certificate registration
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${ACME_EMAIL:-admin@example.com}
+    command:
+      # Enable Docker provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik
+      
+      # Define entrypoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      
+      # Enable Let's Encrypt certificate resolver
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      
+      # Global HTTP to HTTPS redirect
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      
+      # Enable API and dashboard (optional, disable in production)
+      - --api.dashboard=true
+      - --api.insecure=true
+      
+      # Logging
+      - --log.level=${TRAEFIK_LOG_LEVEL:-INFO}
+      - --accesslog=true
+    volumes:
+      # Docker socket for auto-discovery
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Let's Encrypt certificates storage
+      - traefik-letsencrypt:/letsencrypt
+    networks:
+      - traefik
+    labels:
+      # Enable Traefik for itself (dashboard)
+      - "traefik.enable=true"
+      
+      # Dashboard router (remove in production)
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+
+# Named volumes
+volumes:
+  traefik-letsencrypt:
+    driver: local
+
+# Networks
+networks:
+  traefik:
+    name: ${TRAEFIK_NETWORK:-traefik}
+    driver: bridge

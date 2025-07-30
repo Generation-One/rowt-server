@@ -2,17 +2,36 @@
 
 This guide provides comprehensive instructions for deploying your Rowt server using Docker and Docker Compose in single-tenant mode.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Automated)
 
 ### Prerequisites
 
 - Docker (version 20.10 or later)
 - Docker Compose (version 2.0 or later)
 - Git (for cloning the repository)
-- **Existing Traefik reverse proxy** with Let's Encrypt configured
-- Domain name pointing to your server (e.g., `rowt.generation.one`)
+- Domain name pointing to your server (optional for local development)
 
-### 1. Environment Setup
+### 1. Automated Setup
+
+The easiest way to deploy Rowt is using the automated deployment script:
+
+```bash
+# 1. Setup environment (generates secure credentials automatically)
+./start.sh setup
+
+# 2. Edit .env file with your domain and email
+nano .env  # or vim .env
+
+# 3. Start Traefik (if you don't have it running)
+./start.sh traefik-start
+
+# 4. Start Rowt server
+./start.sh start
+```
+
+### 2. Manual Setup (Alternative)
+
+If you prefer manual setup or have an existing Traefik instance:
 
 1. Copy the environment template:
    ```bash
@@ -33,30 +52,68 @@ This guide provides comprehensive instructions for deploying your Rowt server us
    ROWT_ADMIN_PASSWORD=your-secure-password
    ```
 
-### 2. Deploy with Docker Compose
+3. Deploy with Docker Compose:
+   ```bash
+   # Build and start all services
+   docker-compose up -d
 
-```bash
-# Build and start all services
-docker-compose up -d
+   # View logs
+   docker-compose logs -f rowt-server
 
-# View logs
-docker-compose logs -f rowt-server
-
-# Check service status
-docker-compose ps
-```
+   # Check service status
+   docker-compose ps
+   ```
 
 ### 3. Verify Deployment
 
+The deployment script will automatically check service health. You can also manually verify:
+
 1. Check if the server is running:
    ```bash
+   ./start.sh status
+   # or manually:
    curl http://localhost:3000/health
    ```
 
 2. Access the admin interface:
-   - URL: `http://localhost:3000`
+   - URL: `https://your-domain.com` (or `http://localhost:3000` for local)
    - Email: (as configured in `.env`)
    - Password: (as configured in `.env`)
+
+## 🛠️ Deployment Script Commands
+
+The `start.sh` script provides several commands for managing your Rowt deployment:
+
+### Basic Commands
+```bash
+./start.sh setup         # Setup environment configuration
+./start.sh start         # Start Rowt server services
+./start.sh stop          # Stop Rowt server services
+./start.sh restart       # Restart Rowt server services
+./start.sh logs          # Show service logs
+./start.sh status        # Show service status and resource usage
+./start.sh backup        # Create database backup
+```
+
+### Traefik Commands
+```bash
+./start.sh traefik-start # Start Traefik reverse proxy
+./start.sh traefik-stop  # Stop Traefik reverse proxy
+```
+
+### Examples
+```bash
+# First time setup
+./start.sh setup
+# Edit .env file with your settings
+./start.sh traefik-start  # If you don't have Traefik running
+./start.sh start
+
+# Daily operations
+./start.sh logs           # View logs
+./start.sh backup         # Create backup
+./start.sh restart        # Restart services
+```
 
 ## 📋 Configuration Details
 
