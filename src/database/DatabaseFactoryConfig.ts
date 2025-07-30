@@ -17,7 +17,7 @@ export const getDatabaseConfig = (
       type: 'sqlite',
       database: dbUrl || 'database.sqlite',
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-      synchronize: configService.get<string>('NODE_ENV') !== 'production',
+      synchronize: configService.get<string>('ROWT_DB_SYNC') === 'true' || configService.get<string>('NODE_ENV') !== 'production',
       namingStrategy: new SnakeNamingStrategy(),
     };
   }
@@ -35,7 +35,7 @@ export const getDatabaseConfig = (
       password,
       database,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-      synchronize: configService.get<string>('NODE_ENV') !== 'production',
+      synchronize: configService.get<string>('ROWT_DB_SYNC') === 'true' || configService.get<string>('NODE_ENV') !== 'production',
       ssl: enableSSL ? { rejectUnauthorized: false } : false,
       namingStrategy: new SnakeNamingStrategy(),
     };
@@ -53,7 +53,7 @@ export const getDatabaseConfig = (
     password: dbDetails.password || 'postgres',
     database: dbDetails.database || 'rowt',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: configService.get<string>('NODE_ENV') !== 'production',
+    synchronize: configService.get<string>('ROWT_DB_SYNC') === 'true' || configService.get<string>('NODE_ENV') !== 'production',
     ssl: enableSSL ? { rejectUnauthorized: false } : false,
     namingStrategy: new SnakeNamingStrategy(),
   };
