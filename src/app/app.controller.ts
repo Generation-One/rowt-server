@@ -35,11 +35,18 @@ export class AppController {
   @Public()
   @Get('health') // Health check endpoint for Docker and monitoring
   getHealth(): object {
+    const packageJson = require('../../package.json');
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
       service: 'rowt-server',
-      version: '1.0.0'
+      version: packageJson.version || '1.0.1',
+      buildInfo: {
+        dbSyncEnabled: process.env.ROWT_DB_SYNC || 'false',
+        tenantMode: process.env.ROWT_TENANT_MODE || 'single-tenant',
+        nodeEnv: process.env.NODE_ENV || 'development',
+        lastUpdate: 'Database table creation fix (2025-07-30)'
+      }
     };
   }
 

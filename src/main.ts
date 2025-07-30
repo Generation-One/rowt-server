@@ -30,6 +30,16 @@ async function bootstrap() {
   const port = process.env.PORT || 8080;
   await app.listen(port, '0.0.0.0', () => {
     console.log(`Application is running on port: ${port}`);
+
+    // Build and version information
+    const buildDate = new Date().toISOString();
+    const packageVersion = process.env.npm_package_version || '1.0.0';
+    console.log(`🚀 Rowt Server v${packageVersion}`);
+    console.log(`📅 Build timestamp: ${buildDate}`);
+    console.log(`🔧 Database sync enabled: ${process.env.ROWT_DB_SYNC || 'false'}`);
+    console.log(`🏢 Tenant mode: ${process.env.ROWT_TENANT_MODE || 'single-tenant'}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📦 Latest update: Database table creation fix (2025-07-30)`);
   });
 }
 bootstrap();
