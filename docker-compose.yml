@@ -8,7 +8,9 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: rowt-server
-    # No ports exposed when using Traefik - only internal exposure
+    # Port exposure for standalone mode (set ROWT_PORT=3000 in Portainer environment)
+    ports:
+      - "${ROWT_PORT}:3000"
     expose:
       - "3000"
     environment:

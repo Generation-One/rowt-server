@@ -2,20 +2,15 @@ version: '3.8'
 
 # Standalone deployment without Traefik
 # Use this when you want to run without reverse proxy
-# Usage: docker-compose -f docker-compose.yml -f docker-compose.standalone.yml up -d
+# Usage: ROWT_PORT=3000 docker-compose -f docker-compose.yml -f docker-compose.standalone.yml up -d
 
 services:
-  # Rowt Server Application
   rowt-server:
-    # Remove Traefik labels and expose port directly
+    # Override: Expose port directly for standalone deployment
     ports:
       - "${ROWT_PORT:-3000}:3000"
+    # Override: Remove all Traefik labels
     labels: []
+    # Override: Use only the internal network (remove traefik network)
     networks:
       - rowt-network
-    # Remove traefik network
-
-networks:
-  # Remove traefik network reference
-  rowt-network:
-    driver: bridge
