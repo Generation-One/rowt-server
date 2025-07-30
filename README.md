@@ -76,8 +76,10 @@ deploy.bat --standalone --port 3000
 ```
 
 **Access your application:**
-- **With Traefik**: `https://rowt.generation.one` (or your configured domain)
-- **Standalone**: `http://localhost:3000` (or your configured port)
+- **With Traefik**: `https://rowt.generation.one` (or your configured domain) - No ports exposed
+- **Standalone**: `http://localhost:3000` (or your configured port) - Only app port exposed
+
+**Security Note**: Production deployments with Traefik expose no external ports for better security. Database and internal services are only accessible within the Docker network.
 
 ## 🔧 Configuration
 
@@ -229,13 +231,29 @@ docker-compose build --no-cache
 ```
 
 ### Port Already in Use
-If you get port conflicts:
+If you get port conflicts during deployment:
+
+**For PostgreSQL port 5432 conflict:**
+```bash
+# This is fixed in production - no database ports are exposed
+# If using development mode, stop conflicting services:
+sudo systemctl stop postgresql  # Linux
+brew services stop postgresql   # Mac
+```
+
+**For application port conflicts in standalone mode:**
 ```bash
 # Use a different port
 ./deploy.sh --standalone --port 8080
 
 # Or find what's using the port
-netstat -tulpn | grep :3000
+netstat -tulpn | grep :3000  # Linux/Mac
+netstat -an | findstr :3000  # Windows
+```
+
+**Recommended**: Use Traefik mode for production (no port conflicts):
+```bash
+./deploy.sh --with-traefik
 ```
 
 ## 📚 Documentation

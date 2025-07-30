@@ -8,9 +8,7 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: rowt-server
-    # Conditional port exposure based on DISABLE_TRAEFIK environment variable
-    ports:
-      - "${ROWT_PORT:-3000}:3000"
+    # No ports exposed when using Traefik - only internal exposure
     expose:
       - "3000"
     environment:
@@ -86,9 +84,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
-    ports:
-      # Expose PostgreSQL port for external access (optional, remove in production)
-      - "5432:5432"
+    # No ports exposed - database is only accessible internally
     restart: unless-stopped
     networks:
       - rowt-network
