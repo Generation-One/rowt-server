@@ -253,4 +253,69 @@ export class LinkRepositoryAdapter implements LinkRepositoryPort {
       }
     }
   }
+
+  async findLinkById(linkId: string): Promise<LinkEntity | null> {
+    try {
+      return await this.linkRepository.findOne({
+        where: { id: linkId },
+        relations: ['project'],
+      });
+    } catch (error) {
+      console.error('Error finding link by ID:', error);
+      return null;
+    }
+  }
+
+  async updateLink(linkId: string, updateData: Partial<Link>): Promise<LinkEntity> {
+    try {
+      // First, find the existing link
+      const existingLink = await this.findLinkById(linkId);
+      if (!existingLink) {
+        throw new NotFoundException(`Link with ID ${linkId} not found`);
+      }
+
+      // Validate JSONB size limits if updating metadata or properties
+      if (updateData.additionalMetadata) {
+        const size = this.getJsonSize(updateData.additionalMetadata);
+        if (size > RowtConfig.max_jsonb_size) {
+          throw new Error(
+            `Additional metadata exceeds ${RowtConfig.max_jsonb_size / 1024}KB limit (${Math.round(size / 1024)}KB)`,
+          );
+        }
+      }
+
+      if (updateData.properties) {
+        const size = this.getJsonSize(updateData.properties);
+        if (size > RowtConfig.max_jsonb_size) {
+          throw new Error(
+            `Properties exceeds ${RowtConfig.max_jsonb_size / 1024}KB limit (${Math.round(size / 1024)}KB)`,
+          );
+        }
+      }
+
+      // Update the link with the provided data
+      await this.linkRepository.update(linkId, {
+        ...(updateData.url && { url: updateData.url }),
+        ...(updateData.title !== undefined && { title: updateData.title }),
+        ...(updateData.description !== undefined && { description: updateData.description }),
+        ...(updateData.imageUrl !== undefined && { imageUrl: updateData.imageUrl }),
+        ...(updateData.fallbackUrlOverride !== undefined && { fallbackUrlOverride: updateData.fallbackUrlOverride }),
+        ...(updateData.additionalMetadata !== undefined && { additionalMetadata: updateData.additionalMetadata }),
+        ...(updateData.properties !== undefined && { properties: updateData.properties }),
+      });
+
+      // Return the updated link
+      const updatedLink = await this.findLinkById(linkId);
+      if (!updatedLink) {
+        throw new Error('Failed to retrieve updated link');
+      }
+
+      return updatedLink;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to update link: ${error.message}`);
+    }
+  }
 }

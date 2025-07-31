@@ -8,4 +8,6 @@ export interface LinkRepositoryPort {
     projectId: string,
     includeInteractions?: boolean,
   ): Promise<LinkEntity[]>;
+  findLinkById(linkId: string): Promise<LinkEntity | null>;
+  updateLink(linkId: string, updateData: Partial<Link>): Promise<LinkEntity>;
 }
