@@ -12,7 +12,7 @@ This fork provides a complete Docker-based deployment solution with Traefik inte
 
 - Docker & Docker Compose
 - Existing Traefik reverse proxy (with Let's Encrypt)
-- Domain name (e.g., `rowt.generation.one`)
+- Domain name (e.g., `rowt.yourdomain.com`)
 
 ### 1. Clone and Configure
 
@@ -28,7 +28,7 @@ Edit `.env` with your settings:
 
 ```bash
 # Domain Configuration
-DOMAIN=rowt.generation.one
+DOMAIN=rowt.yourdomain.com
 TRAEFIK_NETWORK=traefik
 
 # Database (PostgreSQL recommended)
@@ -76,7 +76,7 @@ deploy.bat --standalone --port 3000
 ```
 
 **Access your application:**
-- **With Traefik**: `https://rowt.generation.one` (or your configured domain) - No ports exposed
+- **With Traefik**: `https://rowt.yourdomain.com` (or your configured domain) - No ports exposed
 - **Standalone**: `http://localhost:3000` (or your configured port) - Only app port exposed
 
 **Security Note**: Production deployments with Traefik expose no external ports for better security. Database and internal services are only accessible within the Docker network.
@@ -96,7 +96,7 @@ This deployment assumes you have Traefik already running. The configuration incl
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DOMAIN` | Your domain name | `rowt.generation.one` |
+| `DOMAIN` | Your domain name | `rowt.yourdomain.com` |
 | `TRAEFIK_NETWORK` | Traefik network name | `traefik` |
 | `ROWT_TENANT_MODE` | Single or multi-tenant | `single-tenant` |
 | `ROWT_JWT_SECRET` | JWT signing secret | `32-char-random-string` |

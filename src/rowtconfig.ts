@@ -10,7 +10,7 @@ const RowtConfig = {
 
   // Interaction behavior
   will_track_interactions: true,
-  absolute_fallback_url: 'https://notfound.rowt.app',
+  absolute_fallback_url: 'https://notfound.yourdomain.com',
 
   // Abuse prevention
   rate_limit_defaults: [

@@ -41,7 +41,7 @@ If you prefer manual setup or have an existing Traefik instance:
 2. Edit the `.env` file with your configuration:
    ```bash
    # Required: Domain configuration
-   DOMAIN=rowt.generation.one
+   DOMAIN=rowt.yourdomain.com
    TRAEFIK_NETWORK=traefik
 
    # Required: Generate a secure JWT secret
