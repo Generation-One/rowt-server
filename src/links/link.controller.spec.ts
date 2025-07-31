@@ -4,6 +4,7 @@ import { LinkController } from './link.controller';
 import { LinkService } from './link.service';
 import { ProjectService } from '../projects/project.service';
 import { UpdateLinkDTO } from './dto/updateLink.dto';
+import { DeleteLinkDTO } from './dto/deleteLink.dto';
 import { LinkEntity } from './link.entity';
 import { ProjectEntity } from '../projects/project.entity';
 
@@ -47,6 +48,7 @@ describe('LinkController', () => {
   const mockLinkService = {
     findLinkById: jest.fn(),
     updateLink: jest.fn(),
+    deleteLink: jest.fn(),
   };
 
   const mockProjectService = {
@@ -154,6 +156,79 @@ describe('LinkController', () => {
     it('should throw 400 when link ID is missing', async () => {
       // Act & Assert
       await expect(controller.updateLink('', updateLinkDto))
+        .rejects
+        .toThrow(new HttpException('Missing link ID', HttpStatus.BAD_REQUEST));
+    });
+  });
+
+  describe('deleteLink', () => {
+    const deleteLinkDto: DeleteLinkDTO = {
+      projectId: 'test-project-id',
+      apiKey: 'test-api-key',
+    };
+
+    it('should successfully delete a link', async () => {
+      // Arrange
+      mockLinkService.findLinkById.mockResolvedValue(mockLinkEntity);
+      mockProjectService.authorize.mockResolvedValue(true);
+      mockLinkService.deleteLink.mockResolvedValue(undefined);
+
+      // Act
+      const result = await controller.deleteLink('test-link-id', deleteLinkDto);
+
+      // Assert
+      expect(mockLinkService.findLinkById).toHaveBeenCalledWith('test-link-id');
+      expect(mockProjectService.authorize).toHaveBeenCalledWith('test-project-id', 'test-api-key');
+      expect(mockLinkService.deleteLink).toHaveBeenCalledWith('test-link-id');
+      expect(result).toEqual({
+        message: 'Link deleted successfully',
+        linkId: 'test-link-id',
+      });
+    });
+
+    it('should throw 404 when link is not found', async () => {
+      // Arrange
+      mockLinkService.findLinkById.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(controller.deleteLink('non-existent-id', deleteLinkDto))
+        .rejects
+        .toThrow(new HttpException('Link not found', HttpStatus.NOT_FOUND));
+    });
+
+    it('should throw 403 when API key is invalid', async () => {
+      // Arrange
+      mockLinkService.findLinkById.mockResolvedValue(mockLinkEntity);
+      mockProjectService.authorize.mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(controller.deleteLink('test-link-id', deleteLinkDto))
+        .rejects
+        .toThrow(new HttpException('Unauthorized - invalid API key for this link', HttpStatus.FORBIDDEN));
+    });
+
+    it('should throw 400 when project ID mismatch', async () => {
+      // Arrange
+      const mismatchDto = { ...deleteLinkDto, projectId: 'different-project-id' };
+      mockLinkService.findLinkById.mockResolvedValue(mockLinkEntity);
+      mockProjectService.authorize.mockResolvedValue(true); // Authorization passes first
+
+      // Act & Assert
+      await expect(controller.deleteLink('test-link-id', mismatchDto))
+        .rejects
+        .toThrow(new HttpException('Project ID mismatch', HttpStatus.BAD_REQUEST));
+    });
+
+    it('should throw 400 when request body is missing', async () => {
+      // Act & Assert
+      await expect(controller.deleteLink('test-link-id', null as any))
+        .rejects
+        .toThrow(new HttpException('Invalid request - missing body', HttpStatus.BAD_REQUEST));
+    });
+
+    it('should throw 400 when link ID is missing', async () => {
+      // Act & Assert
+      await expect(controller.deleteLink('', deleteLinkDto))
         .rejects
         .toThrow(new HttpException('Missing link ID', HttpStatus.BAD_REQUEST));
     });

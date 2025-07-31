@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Put, Param, Req, HttpStatus, HttpException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Delete, Param, Req, HttpStatus, HttpException } from '@nestjs/common';
 import { LinkService } from './link.service';
 import { CreateLinkDTO } from './dto/createLink.dto';
 import { UpdateLinkDTO } from './dto/updateLink.dto';
+import { DeleteLinkDTO } from './dto/deleteLink.dto';
 import { Public } from 'src/auth/public.guard';
 import { readHtmlFile } from 'src/utils/readHtmlFile';
 import { ProjectService } from 'src/projects/project.service';
@@ -168,6 +169,67 @@ export class LinkController {
       }
 
       console.error('Error updating link:', error);
+      throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Public()
+  @Delete(':id')
+  async deleteLink(
+    @Param('id') linkId: string,
+    @Body() deleteLinkRequest: DeleteLinkDTO,
+  ) {
+    try {
+      if (!deleteLinkRequest) {
+        throw new HttpException('Invalid request - missing body', HttpStatus.BAD_REQUEST);
+      }
+
+      if (!linkId) {
+        throw new HttpException('Missing link ID', HttpStatus.BAD_REQUEST);
+      }
+
+      // First, find the existing link to verify ownership
+      const existingLink = await this.linkService.findLinkById(linkId);
+      if (!existingLink) {
+        throw new HttpException('Link not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify authorization using the project from the existing link
+      const authorized = await this.projectService.authorize(
+        existingLink.project.id,
+        deleteLinkRequest.apiKey,
+      );
+      if (!authorized) {
+        throw new HttpException('Unauthorized - invalid API key for this link', HttpStatus.FORBIDDEN);
+      }
+
+      // Verify that the projectId in the request matches the link's project (if provided)
+      if (deleteLinkRequest.projectId && deleteLinkRequest.projectId !== existingLink.project.id) {
+        throw new HttpException('Project ID mismatch', HttpStatus.BAD_REQUEST);
+      }
+
+      // Delete the link
+      await this.linkService.deleteLink(linkId);
+
+      // Return success response
+      return {
+        message: 'Link deleted successfully',
+        linkId: linkId,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // Handle specific error types
+      if (error.message.includes('not found')) {
+        throw new HttpException('Link not found', HttpStatus.NOT_FOUND);
+      }
+      if (error.message.includes('Unauthorized')) {
+        throw new HttpException('Unauthorized', HttpStatus.FORBIDDEN);
+      }
+
+      console.error('Error deleting link:', error);
       throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

@@ -10,4 +10,5 @@ export interface LinkRepositoryPort {
   ): Promise<LinkEntity[]>;
   findLinkById(linkId: string): Promise<LinkEntity | null>;
   updateLink(linkId: string, updateData: Partial<Link>): Promise<LinkEntity>;
+  deleteLink(linkId: string): Promise<void>;
 }

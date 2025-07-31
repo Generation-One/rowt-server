@@ -61,4 +61,8 @@ export class LinkService {
     // Pass the update data to the repository
     return this.linkRepository.updateLink(linkId, updateData);
   }
+
+  async deleteLink(linkId: string): Promise<void> {
+    return this.linkRepository.deleteLink(linkId);
+  }
 }

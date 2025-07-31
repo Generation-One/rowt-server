@@ -318,4 +318,26 @@ export class LinkRepositoryAdapter implements LinkRepositoryPort {
       throw new Error(`Failed to update link: ${error.message}`);
     }
   }
+
+  async deleteLink(linkId: string): Promise<void> {
+    try {
+      // First, find the existing link to verify it exists
+      const existingLink = await this.findLinkById(linkId);
+      if (!existingLink) {
+        throw new NotFoundException(`Link with ID ${linkId} not found`);
+      }
+
+      // Delete the link from the database
+      const result = await this.linkRepository.delete(linkId);
+
+      if (result.affected === 0) {
+        throw new Error('Failed to delete link - no rows affected');
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to delete link: ${error.message}`);
+    }
+  }
 }
