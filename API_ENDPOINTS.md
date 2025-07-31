@@ -243,7 +243,7 @@ curl -X PUT "https://your-domain.com/projects/550e8400-e29b-41d4-a716-4466554400
 2. **Public Endpoints**: Link endpoints are marked as `@Public()` but require API key authentication
 3. **Partial Updates**: The update endpoint supports partial updates - only provided fields will be updated
 4. **JSONB Limits**: `additionalMetadata` and `properties` fields have a 10KB size limit
-5. **Cascading Deletes**: Deleting a link will also delete all associated interaction records
+5. **Cascading Deletes**: Deleting a link will automatically delete all associated interaction records in a transaction
 6. **Immutable Fields**: Link ID and creation timestamp cannot be modified via the update endpoint
 
 ### Project Endpoints

@@ -327,12 +327,28 @@ export class LinkRepositoryAdapter implements LinkRepositoryPort {
         throw new NotFoundException(`Link with ID ${linkId} not found`);
       }
 
-      // Delete the link from the database
-      const result = await this.linkRepository.delete(linkId);
+      // Use a transaction to ensure data consistency
+      await this.linkRepository.manager.transaction(async (transactionalEntityManager) => {
+        // First, delete all interactions associated with this link
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('interactions')
+          .where('link_id = :linkId', { linkId })
+          .execute();
 
-      if (result.affected === 0) {
-        throw new Error('Failed to delete link - no rows affected');
-      }
+        // Then delete the link itself
+        const result = await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('links')
+          .where('id = :linkId', { linkId })
+          .execute();
+
+        if (result.affected === 0) {
+          throw new Error('Failed to delete link - no rows affected');
+        }
+      });
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
