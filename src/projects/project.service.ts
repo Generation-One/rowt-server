@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProjectRepositoryPort } from './project.repository.port';
 import { GetProjectOptions } from './project.model';
 import { UpdateProjectDTO } from './dto/updateProjectDTO';
+import { EditProjectDTO } from './dto/editProject.dto';
 import { ProjectEntity } from './project.entity';
 
 @Injectable()
@@ -31,5 +32,13 @@ export class ProjectService {
 
   async regenerateApiKey(projectId: string, userId: string): Promise<string> {
     return this.projectRepository.regenerateApiKey(projectId, userId);
+  }
+
+  async findProjectById(projectId: string): Promise<ProjectEntity | null> {
+    return this.projectRepository.findProjectById(projectId);
+  }
+
+  async editProject(projectId: string, userId: string, editProjectDto: EditProjectDTO): Promise<ProjectEntity> {
+    return this.projectRepository.editProject(projectId, userId, editProjectDto);
   }
 }

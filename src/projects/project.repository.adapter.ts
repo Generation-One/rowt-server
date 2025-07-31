@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { ProjectEntity } from './project.entity';
 import { UpdateProjectDTO } from './dto/updateProjectDTO';
 import { CreateProjectDTO } from './dto/createProjectDTO';
+import { EditProjectDTO } from './dto/editProject.dto';
 import { ProjectRepositoryPort } from './project.repository.port';
 import { GetProjectOptions } from './project.model';
 
@@ -180,5 +181,54 @@ export class ProjectRepositoryAdapter implements ProjectRepositoryPort {
     await this.projectRepository.save(project);
 
     return newApiKey;
+  }
+
+  async findProjectById(projectId: string): Promise<ProjectEntity | null> {
+    try {
+      return await this.projectRepository.findOne({
+        where: { id: projectId },
+        relations: ['user'],
+      });
+    } catch (error) {
+      console.error('Error finding project by ID:', error);
+      return null;
+    }
+  }
+
+  async editProject(projectId: string, userId: string, updateData: EditProjectDTO): Promise<ProjectEntity> {
+    try {
+      // First, find the existing project and verify ownership
+      const existingProject = await this.projectRepository.findOne({
+        where: { id: projectId, userId: userId },
+      });
+
+      if (!existingProject) {
+        throw new NotFoundException('Project not found or access denied');
+      }
+
+      // Update the project with the provided data
+      await this.projectRepository.update(projectId, {
+        ...(updateData.name !== undefined && { name: updateData.name }),
+        ...(updateData.baseUrl !== undefined && { baseUrl: updateData.baseUrl }),
+        ...(updateData.fallbackUrl !== undefined && { fallbackUrl: updateData.fallbackUrl }),
+        ...(updateData.appstoreId !== undefined && { appstoreId: updateData.appstoreId }),
+        ...(updateData.playstoreId !== undefined && { playstoreId: updateData.playstoreId }),
+        ...(updateData.iosScheme !== undefined && { iosScheme: updateData.iosScheme }),
+        ...(updateData.androidScheme !== undefined && { androidScheme: updateData.androidScheme }),
+      });
+
+      // Return the updated project
+      const updatedProject = await this.findProjectById(projectId);
+      if (!updatedProject) {
+        throw new Error('Failed to retrieve updated project');
+      }
+
+      return updatedProject;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to edit project: ${error.message}`);
+    }
   }
 }

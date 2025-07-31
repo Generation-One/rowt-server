@@ -1,6 +1,7 @@
 import { ProjectEntity } from './project.entity';
 import { GetProjectOptions } from './project.model';
 import { UpdateProjectDTO } from './dto/updateProjectDTO';
+import { EditProjectDTO } from './dto/editProject.dto';
 import { CreateProjectDTO } from './dto/createProjectDTO';
 
 export abstract class ProjectRepositoryPort {
@@ -16,6 +17,8 @@ export abstract class ProjectRepositoryPort {
   abstract updateProject(project: UpdateProjectDTO): Promise<ProjectEntity>;
   abstract getUserProjects(userId: string): Promise<ProjectEntity[]>;
   abstract regenerateApiKey(projectId: string, userId: string): Promise<string>;
+  abstract findProjectById(projectId: string): Promise<ProjectEntity | null>;
+  abstract editProject(projectId: string, userId: string, updateData: EditProjectDTO): Promise<ProjectEntity>;
   // abstract deleteProject(projectId: string): Promise<ProjectEntity>;
 
   // abstract getProjectByApiKey(apiKey: string): Promise<ProjectEntity | null>;

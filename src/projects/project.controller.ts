@@ -2,13 +2,18 @@ import {
   Body,
   Controller,
   Post,
+  Put,
+  Param,
   Req,
   Res,
   NotFoundException,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { UpdateProjectDTO } from './dto/updateProjectDTO';
+import { EditProjectDTO } from './dto/editProject.dto';
 import { ProjectService } from './project.service';
 import { GetProjectOptions } from './project.model';
 
@@ -167,6 +172,64 @@ class ProjectController {
       } else {
         res.status(500).json({ message: 'Error generating API key' });
       }
+    }
+  }
+
+  @Put(':id')
+  async editProject(
+    @Param('id') projectId: string,
+    @Body() editProjectRequest: EditProjectDTO,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    try {
+      if (!editProjectRequest) {
+        throw new HttpException('Invalid request - missing body', HttpStatus.BAD_REQUEST);
+      }
+
+      if (!projectId) {
+        throw new HttpException('Missing project ID', HttpStatus.BAD_REQUEST);
+      }
+
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new HttpException('Unauthorized - missing user ID', HttpStatus.UNAUTHORIZED);
+      }
+
+      // Edit the project
+      const updatedProject = await this.projectService.editProject(projectId, userId, editProjectRequest);
+
+      if (!updatedProject) {
+        throw new HttpException('Failed to edit project', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // Return success response with updated project data
+      return {
+        message: 'Project updated successfully',
+        project: {
+          id: updatedProject.id,
+          name: updatedProject.name,
+          baseUrl: updatedProject.baseUrl,
+          fallbackUrl: updatedProject.fallbackUrl,
+          appstoreId: updatedProject.appstoreId,
+          playstoreId: updatedProject.playstoreId,
+          iosScheme: updatedProject.iosScheme,
+          androidScheme: updatedProject.androidScheme,
+          apiKey: updatedProject.apiKey,
+          userId: updatedProject.userId,
+        },
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // Handle specific error types
+      if (error.message.includes('not found') || error.message.includes('access denied')) {
+        throw new HttpException('Project not found or access denied', HttpStatus.NOT_FOUND);
+      }
+
+      console.error('Error editing project:', error);
+      throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
