@@ -276,6 +276,7 @@ netstat -an | findstr :3000  # Windows
 
 This fork adds:
 
+- ✅ **Parameterized Links** Create dynamic links with URL parameters
 - ✅ **Production-ready Dockerfile** with multi-stage build
 - ✅ **Traefik integration** with automatic HTTPS
 - ✅ **Docker Compose** setup with PostgreSQL
