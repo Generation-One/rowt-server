@@ -4,6 +4,7 @@ import { CreateLinkDTO } from './dto/createLink.dto';
 import { UpdateLinkDTO } from './dto/updateLink.dto';
 import { Link } from './link.model';
 import { LinkEntity } from './link.entity';
+import { isParameterizedUrl } from '../utils/parameterSubstitution';
 
 @Injectable()
 export class LinkService {
@@ -13,6 +14,9 @@ export class LinkService {
   ) {}
 
   async createLink(createLinkDto: CreateLinkDTO): Promise<string> {
+    // Auto-detect if URL is parameterized if not explicitly set
+    const isParameterized = createLinkDto.isParameterized ?? isParameterizedUrl(createLinkDto.url);
+
     // Transform DTO into Link domain model
     const link: Link = {
       projectId: createLinkDto.projectId,
@@ -23,6 +27,7 @@ export class LinkService {
       fallbackUrlOverride: createLinkDto.fallbackUrlOverride,
       additionalMetadata: createLinkDto.additionalMetadata,
       properties: createLinkDto.properties,
+      isParameterized,
     };
 
     // Pass the Link to the repository
@@ -47,6 +52,12 @@ export class LinkService {
   }
 
   async updateLink(linkId: string, updateLinkDto: UpdateLinkDTO): Promise<LinkEntity> {
+    // Auto-detect if URL is parameterized if URL is being updated
+    let isParameterized = updateLinkDto.isParameterized;
+    if (updateLinkDto.url && isParameterized === undefined) {
+      isParameterized = isParameterizedUrl(updateLinkDto.url);
+    }
+
     // Transform DTO into partial Link domain model
     const updateData: Partial<Link> = {
       ...(updateLinkDto.url && { url: updateLinkDto.url }),
@@ -56,6 +67,7 @@ export class LinkService {
       ...(updateLinkDto.fallbackUrlOverride !== undefined && { fallbackUrlOverride: updateLinkDto.fallbackUrlOverride }),
       ...(updateLinkDto.additionalMetadata !== undefined && { additionalMetadata: updateLinkDto.additionalMetadata }),
       ...(updateLinkDto.properties !== undefined && { properties: updateLinkDto.properties }),
+      ...(isParameterized !== undefined && { isParameterized }),
     };
 
     // Pass the update data to the repository

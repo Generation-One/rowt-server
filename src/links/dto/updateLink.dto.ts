@@ -8,9 +8,9 @@ export class UpdateLinkDTO {
   @IsString()
   apiKey: string;
 
-  @IsUrl()
+  @IsString()
   @IsOptional()
-  url?: string;
+  url?: string; // Changed from @IsUrl to @IsString to allow parameterized templates
 
   @IsDate()
   @IsOptional()
@@ -41,4 +41,8 @@ export class UpdateLinkDTO {
   @IsBoolean()
   @IsOptional()
   active?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isParameterized?: boolean; // Flag to indicate if this link uses parameter substitution
 }

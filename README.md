@@ -8,6 +8,16 @@ A production-ready, containerized deployment of [Rowt](https://github.com/Rowt-D
 
 This fork provides a complete Docker-based deployment solution with Traefik integration for secure, production-ready hosting.
 
+## ✨ Key Features
+
+- **🔗 Parameterized Links**: Create dynamic links with URL parameters - one template for thousands of variations! Perfect for multi-merchant platforms, user-specific redirects, and campaign tracking. [Learn more →](./PARAMETERIZED_LINKS.md)
+- **📱 Deep Link Management**: iOS/Android app scheme handling with web fallbacks
+- **📊 Analytics Tracking**: Built-in interaction logging with device/country detection
+- **🔐 JWT Authentication**: Secure API access with refresh tokens and blacklisting
+- **⚡ Rate Limiting**: Built-in abuse prevention (30 req/min default)
+- **🧹 Auto Cleanup**: Scheduled data retention and token management
+- **🐳 Production Ready**: Docker deployment with Traefik integration
+
 ### Prerequisites
 
 - Docker & Docker Compose

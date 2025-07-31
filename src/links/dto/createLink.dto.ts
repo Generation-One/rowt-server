@@ -1,4 +1,4 @@
-import { IsUUID, IsUrl, IsOptional, IsString, IsDate } from 'class-validator';
+import { IsUUID, IsUrl, IsOptional, IsString, IsDate, IsBoolean } from 'class-validator';
 
 export class CreateLinkDTO {
   @IsUUID()
@@ -8,8 +8,8 @@ export class CreateLinkDTO {
   @IsString()
   apiKey: string;
 
-  @IsUrl()
-  url: string;
+  @IsString()
+  url: string; // Changed from @IsUrl to @IsString to allow parameterized templates
 
   @IsDate()
   @IsOptional()
@@ -36,4 +36,8 @@ export class CreateLinkDTO {
 
   @IsOptional()
   properties?: Record<string, any>;
+
+  @IsBoolean()
+  @IsOptional()
+  isParameterized?: boolean; // Flag to indicate if this link uses parameter substitution
 }

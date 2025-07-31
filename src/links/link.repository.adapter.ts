@@ -217,6 +217,7 @@ export class LinkRepositoryAdapter implements LinkRepositoryPort {
       additionalMetadata: link.additionalMetadata,
       properties: link.properties,
       lifetimeClicks: 0,
+      isParameterized: link.isParameterized || false,
     });
 
     console.log('LinkEntity being created');

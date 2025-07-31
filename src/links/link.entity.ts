@@ -56,6 +56,9 @@ export class LinkEntity {
   @Column({ type: 'int', default: 0 }) // Integer with default value
   lifetimeClicks: number;
 
+  @Column({ type: 'boolean', default: false }) // Flag to indicate if this link uses parameter substitution
+  isParameterized: boolean;
+
   // One-to-Many relationship with InteractionEntity
   @OneToMany(() => InteractionEntity, (interaction) => interaction.link)
   interactions: InteractionEntity[];

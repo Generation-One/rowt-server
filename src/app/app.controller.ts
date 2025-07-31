@@ -3,6 +3,7 @@ import {
   Get,
   Ip,
   Param,
+  Query,
   Req,
   Request,
   Res,
@@ -77,6 +78,7 @@ export class AppController {
   @Get(':shortCode') // Main redirection logic to the link
   async getLink(
     @Param('shortCode') shortCode: string,
+    @Query() queryParams: Record<string, string>,
     @Req() request: Request,
     @Ip() ip: string,
     @Res() response: ExpressResponse,
@@ -127,6 +129,7 @@ export class AppController {
       const finalLink = this.appService.openAppOnUserDevice(
         link,
         request.headers['user-agent'],
+        queryParams,
       );
 
       // Detect platform and get appropriate fallback URL
