@@ -2,6 +2,7 @@ export class Link {
   constructor(
     public readonly projectId: string,
     public readonly url: string,
+    public readonly customShortcode?: string,
     public readonly title?: string,
     public readonly description?: string,
     public readonly imageUrl?: string,

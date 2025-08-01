@@ -1,4 +1,4 @@
-import { IsUUID, IsUrl, IsOptional, IsString, IsDate, IsBoolean } from 'class-validator';
+import { IsUUID, IsUrl, IsOptional, IsString, IsDate, IsBoolean, Length, Matches } from 'class-validator';
 
 export class CreateLinkDTO {
   @IsUUID()
@@ -40,4 +40,10 @@ export class CreateLinkDTO {
   @IsBoolean()
   @IsOptional()
   isParameterized?: boolean; // Flag to indicate if this link uses parameter substitution
+
+  @IsString()
+  @IsOptional()
+  @Length(1, 12) // Minimum 1 char, maximum 12 chars
+  @Matches(/^[a-zA-Z0-9_-]+$/, { message: 'Shortcode can only contain letters, numbers, hyphens, and underscores' })
+  customShortcode?: string;
 }

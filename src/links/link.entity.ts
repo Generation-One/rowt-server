@@ -68,31 +68,34 @@ export class LinkEntity {
 
   @BeforeInsert()
   async generateCustomUid() {
-    try {
-      // Get the entity manager from the entity instance context
-      // This is available during entity lifecycle events
-      const entityManager: EntityManager = (this as any).manager;
+    // Only generate if no custom shortcode was provided
+    if (!this.id) {
+      try {
+        // Get the entity manager from the entity instance context
+        // This is available during entity lifecycle events
+        const entityManager: EntityManager = (this as any).manager;
 
-      // Check if this is PostgreSQL
-      if (entityManager.connection.options.type === 'postgres') {
-        try {
-          // Try to use the PostgreSQL function
-          const result = await entityManager.query('SELECT generate_uid(12)');
-          this.id = result[0].generate_uid;
-          return;
-        } catch (err) {
-          console.warn(
-            'PostgreSQL generate_uid function not available, falling back to application-level generation',
-          );
-          // Fall through to application-level generation
+        // Check if this is PostgreSQL
+        if (entityManager.connection.options.type === 'postgres') {
+          try {
+            // Try to use the PostgreSQL function
+            const result = await entityManager.query('SELECT generate_uid(12)');
+            this.id = result[0].generate_uid;
+            return;
+          } catch (err) {
+            console.warn(
+              'PostgreSQL generate_uid function not available, falling back to application-level generation',
+            );
+            // Fall through to application-level generation
+          }
         }
-      }
 
-      // For SQLite or as a fallback
-      this.id = randomUUID().replace(/-/g, '').substring(0, 12);
-    } catch (error) {
-      console.error('Error generating UID, using application fallback:', error);
-      this.id = randomUUID().replace(/-/g, '').substring(0, 12);
+        // For SQLite or as a fallback
+        this.id = randomUUID().replace(/-/g, '').substring(0, 12);
+      } catch (error) {
+        console.error('Error generating UID, using application fallback:', error);
+        this.id = randomUUID().replace(/-/g, '').substring(0, 12);
+      }
     }
   }
 }

@@ -208,6 +208,8 @@ export class LinkRepositoryAdapter implements LinkRepositoryPort {
     }
 
     const linkEntity = this.linkRepository.create({
+      // Set custom shortcode as ID if provided
+      id: link.customShortcode,
       project: { id: link.projectId },
       url: link.url,
       title: link.title,

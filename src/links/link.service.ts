@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { LinkRepositoryPort } from './link.repository.port';
 import { CreateLinkDTO } from './dto/createLink.dto';
 import { UpdateLinkDTO } from './dto/updateLink.dto';
@@ -14,21 +14,39 @@ export class LinkService {
   ) {}
 
   async createLink(createLinkDto: CreateLinkDTO): Promise<string> {
+    // Validate custom shortcode if provided
+    if (createLinkDto.customShortcode) {
+      // Check if shortcode already exists
+      const existingLink = await this.linkRepository.findLinkById(createLinkDto.customShortcode);
+
+      if (existingLink) {
+        throw new BadRequestException('Custom shortcode already exists. Please choose a different one.');
+      }
+
+      // Additional validation for reserved words/patterns
+      const reservedWords = ['api', 'admin', 'www', 'link', 'health', 'static'];
+      if (reservedWords.includes(createLinkDto.customShortcode.toLowerCase())) {
+        throw new BadRequestException('Custom shortcode uses a reserved word. Please choose a different one.');
+      }
+    }
+
     // Auto-detect if URL is parameterized if not explicitly set
     const isParameterized = createLinkDto.isParameterized ?? isParameterizedUrl(createLinkDto.url);
 
     // Transform DTO into Link domain model
-    const link: Link = {
-      projectId: createLinkDto.projectId,
-      url: createLinkDto.url,
-      title: createLinkDto.title,
-      description: createLinkDto.description,
-      imageUrl: createLinkDto.imageUrl,
-      fallbackUrlOverride: createLinkDto.fallbackUrlOverride,
-      additionalMetadata: createLinkDto.additionalMetadata,
-      properties: createLinkDto.properties,
+    const link: Link = new Link(
+      createLinkDto.projectId,
+      createLinkDto.url,
+      createLinkDto.customShortcode, // Pass custom shortcode
+      createLinkDto.title,
+      createLinkDto.description,
+      createLinkDto.imageUrl,
+      createLinkDto.fallbackUrlOverride,
+      createLinkDto.additionalMetadata,
+      createLinkDto.properties,
+      undefined, // lifetimeClicks
       isParameterized,
-    };
+    );
 
     // Pass the Link to the repository
     const savedEntity = await this.linkRepository.createLink(link);
