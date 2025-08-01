@@ -1,8 +1,59 @@
 # 🔗 Link Management & Project API Endpoints
 
-This document describes the API endpoints for link editing, deletion, and project editing in the Rowt application.
+This document describes the API endpoints for link creation, editing, deletion, and project editing in the Rowt application.
 
-## 1. Update Link - `PUT /link/:id`
+## 1. Create Link - `POST /link`
+
+**Description:** Creates a new link with optional custom shortcode. If no custom shortcode is provided, a 12-character UID is auto-generated.
+
+**URL:** `POST /link`
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
+
+**Request Body (CreateLinkDTO):**
+```typescript
+{
+  "projectId": string,        // UUID, required - Project ID for authorization
+  "apiKey": string,          // required - API key for authentication
+  "url": string,             // required - Target URL (supports parameterized URLs)
+  "customShortcode"?: string, // optional - Custom shortcode (1-12 chars, alphanumeric + hyphens/underscores)
+  "title"?: string,          // optional - Link title
+  "description"?: string,    // optional - Link description
+  "imageUrl"?: string,       // optional - Image URL (must be valid URL)
+  "fallbackUrlOverride"?: string, // optional - Fallback URL (must be valid URL)
+  "additionalMetadata"?: Record<string, any>, // optional - JSONB metadata (max 10KB)
+  "properties"?: Record<string, any>,         // optional - JSONB properties (max 10KB)
+  "expiration"?: Date,       // optional - Link expiration date
+  "isParameterized"?: boolean // optional - Flag for parameterized URLs (auto-detected if not provided)
+}
+```
+
+**Success Response (200 OK):**
+```
+https://your-domain.com/my-custom-shortcode
+```
+or
+```
+https://your-domain.com/abc123def456
+```
+
+**Error Responses:**
+- `400 Bad Request`: Invalid request body, custom shortcode already exists, reserved word used, or invalid shortcode format
+- `403 Forbidden`: Invalid API key or unauthorized access
+- `500 Internal Server Error`: Server error
+
+**Custom Shortcode Validation:**
+- Length: 1-12 characters
+- Characters: Letters (a-z, A-Z), numbers (0-9), hyphens (-), underscores (_)
+- Uniqueness: Must be unique across all links
+- Reserved words: Cannot use 'api', 'admin', 'www', 'link', 'health', 'static'
+
+---
+
+## 2. Update Link - `PUT /link/:id`
 
 **Description:** Updates an existing link by ID. Only the link owner (verified via API key) can update their links.
 
@@ -59,7 +110,7 @@ Content-Type: application/json
 
 ---
 
-## 2. Delete Link - `DELETE /link/:id`
+## 3. Delete Link - `DELETE /link/:id`
 
 **Description:** Deletes an existing link by ID. Only the link owner (verified via API key) can delete their links.
 
@@ -97,7 +148,7 @@ Content-Type: application/json
 
 ---
 
-## 3. Edit Project - `PUT /projects/:id`
+## 4. Edit Project - `PUT /projects/:id`
 
 **Description:** Updates an existing project by ID. Only the project owner (verified via JWT authentication) can edit their projects.
 
@@ -170,6 +221,20 @@ Project endpoints use JWT authentication:
 
 ## 📝 Validation Rules
 
+### CreateLinkDTO Validation:
+- `projectId`: Must be a valid UUID string
+- `apiKey`: Must be a non-empty string
+- `url`: Must be a non-empty string (supports parameterized URLs)
+- `customShortcode`: Must be 1-12 characters, alphanumeric + hyphens/underscores only, unique, not a reserved word (if provided)
+- `title`: Must be a string (if provided)
+- `description`: Must be a string (if provided)
+- `imageUrl`: Must be a valid URL format (if provided)
+- `fallbackUrlOverride`: Must be a valid URL format (if provided)
+- `additionalMetadata`: JSONB object, max 10KB size
+- `properties`: JSONB object, max 10KB size
+- `expiration`: Must be a valid date (if provided)
+- `isParameterized`: Must be a boolean (if provided)
+
 ### UpdateLinkDTO Validation:
 - `projectId`: Must be a valid UUID string
 - `apiKey`: Must be a non-empty string
@@ -194,6 +259,31 @@ Project endpoints use JWT authentication:
 - `androidScheme`: Must be a string (if provided)
 
 ## 🧪 Example Usage
+
+### Create Link with Custom Shortcode Example:
+```bash
+curl -X POST "https://your-domain.com/link" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectId": "550e8400-e29b-41d4-a716-446655440000",
+    "apiKey": "your-secret-api-key",
+    "url": "https://example.com",
+    "customShortcode": "my-custom",
+    "title": "My Custom Link"
+  }'
+```
+
+### Create Link with Auto-Generated Shortcode Example:
+```bash
+curl -X POST "https://your-domain.com/link" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectId": "550e8400-e29b-41d4-a716-446655440000",
+    "apiKey": "your-secret-api-key",
+    "url": "https://example.com",
+    "title": "Auto-Generated Link"
+  }'
+```
 
 ### Update Link Example:
 ```bash

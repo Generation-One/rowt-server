@@ -8,8 +8,13 @@ A production-ready, containerized deployment of [Rowt](https://github.com/Rowt-D
 
 This fork provides a complete Docker-based deployment solution with Traefik integration for secure, production-ready hosting.
 
+## 🆕 What's New in v1.2.0
+
+- **🎯 Custom Shortcodes**: Create memorable custom shortcodes for your links! Specify your own 1-12 character shortcodes using letters, numbers, hyphens, and underscores. Perfect for branded links like `yourdomain.com/promo2024` or `yourdomain.com/signup`. Auto-generation still works when no custom shortcode is provided.
+
 ## ✨ Key Features
 
+- **🎯 Custom Shortcodes**: Create memorable custom shortcodes (1-12 chars) or use auto-generated 12-character UIDs. Perfect for branded links and easy sharing! [Learn more →](./CUSTOM_SHORTCODE_EXAMPLES.md)
 - **🔗 Parameterized Links**: Create dynamic links with URL parameters - one template for thousands of variations! Perfect for multi-merchant platforms, user-specific redirects, and campaign tracking. [Learn more →](./PARAMETERIZED_LINKS.md)
 - **📱 Deep Link Management**: iOS/Android app scheme handling with web fallbacks
 - **📊 Analytics Tracking**: Built-in interaction logging with device/country detection
