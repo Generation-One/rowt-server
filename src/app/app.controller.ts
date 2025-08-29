@@ -229,12 +229,12 @@ export class AppController {
             const isAndroid = ${isAndroid};
             
             // Deep link to try to open the app
-            const deepLink = "${this.escapeHtml(finalLink)}";
-            
+            const deepLink = "${finalLink.replace(/"/g, '\\"')}";
+
             // Fallback URLs
-            const regularFallback = "${this.escapeHtml(regularFallback)}";
-            const appStoreUrl = ${appStoreUrl ? '"' + this.escapeHtml(appStoreUrl) + '"' : 'null'};
-            const playStoreUrl = ${playStoreUrl ? '"' + this.escapeHtml(playStoreUrl) + '"' : 'null'};
+            const regularFallback = "${regularFallback.replace(/"/g, '\\"')}";
+            const appStoreUrl = ${appStoreUrl ? '"' + appStoreUrl.replace(/"/g, '\\"') + '"' : 'null'};
+            const playStoreUrl = ${playStoreUrl ? '"' + playStoreUrl.replace(/"/g, '\\"') + '"' : 'null'};
             
             // Try to open the app
             function openApp() {
