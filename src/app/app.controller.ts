@@ -104,18 +104,6 @@ export class AppController {
     return readHtmlFile('src/pages/rejectGet.html');
   }
 
-  @Get('admin')
-  getAdminDashboard(@Res() res: ExpressResponse): void {
-    const htmlContent = readHtmlFile('src/pages/admin-dashboard.html');
-    res.send(htmlContent);
-  }
-
-  @Get('admin/well-known')
-  getWellKnownAdmin(@Res() res: ExpressResponse): void {
-    const htmlContent = readHtmlFile('src/pages/well-known-admin.html');
-    res.send(htmlContent);
-  }
-
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Get(':shortCode') // Main redirection logic to the link
