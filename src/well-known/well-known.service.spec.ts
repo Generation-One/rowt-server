@@ -17,7 +17,13 @@ describe('WellKnownService', () => {
     contentType: 'application/json',
     enabled: true,
     userId: 'user-id',
-    user: null,
+    user: {
+      id: 1,
+      email: 'test@example.com',
+      passwordHash: 'hashed',
+      role: 'user',
+      emailVerified: true,
+    } as any,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
