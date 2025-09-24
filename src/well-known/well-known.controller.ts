@@ -1,22 +1,17 @@
 import {
   Controller,
-  Get,
   Post,
-  Put,
-  Delete,
   Body,
-  Param,
   Req,
   Res,
   HttpStatus,
-  HttpException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { WellKnownService } from './well-known.service';
 import { CreateWellKnownDTO } from './dto/create-well-known.dto';
 import { UpdateWellKnownDTO } from './dto/update-well-known.dto';
-import { Public } from 'src/auth/public.guard';
+
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -30,7 +25,7 @@ interface AuthenticatedRequest extends Request {
 export class WellKnownController {
   constructor(private readonly wellKnownService: WellKnownService) {}
 
-  @Post()
+  @Post('create')
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
   async create(
     @Body() createDto: CreateWellKnownDTO,
@@ -54,7 +49,7 @@ export class WellKnownController {
     }
   }
 
-  @Get()
+  @Post('getAll')
   async findAll(
     @Req() req: AuthenticatedRequest,
     @Res() res: Response,
@@ -76,9 +71,9 @@ export class WellKnownController {
     }
   }
 
-  @Get(':id')
+  @Post('getById')
   async findById(
-    @Param('id') id: string,
+    @Body() body: { id: string },
     @Req() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
@@ -89,7 +84,7 @@ export class WellKnownController {
         return;
       }
 
-      const file = await this.wellKnownService.findById(id, userId);
+      const file = await this.wellKnownService.findById(body.id, userId);
       res.status(HttpStatus.OK).json(file);
     } catch (error) {
       console.error('Error fetching well-known file:', error);
@@ -99,11 +94,10 @@ export class WellKnownController {
     }
   }
 
-  @Put(':id')
+  @Post('update')
   @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 requests per minute
   async update(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateWellKnownDTO,
+    @Body() body: { id: string; data: UpdateWellKnownDTO },
     @Req() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
@@ -114,7 +108,7 @@ export class WellKnownController {
         return;
       }
 
-      const result = await this.wellKnownService.update(id, userId, updateDto);
+      const result = await this.wellKnownService.update(body.id, userId, body.data);
       res.status(HttpStatus.OK).json(result);
     } catch (error) {
       console.error('Error updating well-known file:', error);
@@ -124,10 +118,10 @@ export class WellKnownController {
     }
   }
 
-  @Delete(':id')
+  @Post('delete')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   async delete(
-    @Param('id') id: string,
+    @Body() body: { id: string },
     @Req() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
@@ -138,7 +132,7 @@ export class WellKnownController {
         return;
       }
 
-      await this.wellKnownService.delete(id, userId);
+      await this.wellKnownService.delete(body.id, userId);
       res.status(HttpStatus.NO_CONTENT).send();
     } catch (error) {
       console.error('Error deleting well-known file:', error);

@@ -139,7 +139,7 @@ describe('WellKnownController', () => {
     it('should return file by id', async () => {
       service.findById.mockResolvedValue(mockWellKnownResponse);
 
-      await controller.findById('test-id', mockRequest as any, mockResponse);
+      await controller.findById({ id: 'test-id' }, mockRequest as any, mockResponse);
 
       expect(service.findById).toHaveBeenCalledWith('test-id', 'test-user-id');
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -149,7 +149,7 @@ describe('WellKnownController', () => {
     it('should return 404 if file not found', async () => {
       service.findById.mockRejectedValue(new Error('File not found'));
 
-      await controller.findById('test-id', mockRequest as any, mockResponse);
+      await controller.findById({ id: 'test-id' }, mockRequest as any, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -168,7 +168,7 @@ describe('WellKnownController', () => {
       const updatedResponse = { ...mockWellKnownResponse, ...updateDto };
       service.update.mockResolvedValue(updatedResponse);
 
-      await controller.update('test-id', updateDto, mockRequest as any, mockResponse);
+      await controller.update({ id: 'test-id', data: updateDto }, mockRequest as any, mockResponse);
 
       expect(service.update).toHaveBeenCalledWith('test-id', 'test-user-id', updateDto);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -182,7 +182,7 @@ describe('WellKnownController', () => {
 
       service.update.mockRejectedValue(new Error('Update failed'));
 
-      await controller.update('test-id', updateDto, mockRequest as any, mockResponse);
+      await controller.update({ id: 'test-id', data: updateDto }, mockRequest as any, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -195,7 +195,7 @@ describe('WellKnownController', () => {
     it('should delete file successfully', async () => {
       service.delete.mockResolvedValue(undefined);
 
-      await controller.delete('test-id', mockRequest as any, mockResponse);
+      await controller.delete({ id: 'test-id' }, mockRequest as any, mockResponse);
 
       expect(service.delete).toHaveBeenCalledWith('test-id', 'test-user-id');
       expect(mockResponse.status).toHaveBeenCalledWith(204);
@@ -205,7 +205,7 @@ describe('WellKnownController', () => {
     it('should handle delete errors', async () => {
       service.delete.mockRejectedValue(new Error('Delete failed'));
 
-      await controller.delete('test-id', mockRequest as any, mockResponse);
+      await controller.delete({ id: 'test-id' }, mockRequest as any, mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
