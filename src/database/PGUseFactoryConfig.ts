@@ -7,6 +7,7 @@ import { createDataSource } from 'src/utils/createDataSource';
 import { LinkEntity } from 'src/links/link.entity';
 import { InteractionEntity } from 'src/links/interaction.entity';
 import { ProjectEntity } from 'src/projects/project.entity';
+import { WellKnownEntity } from 'src/well-known/well-known.entity';
 
 const PGUseFactoryConfig = async (configService: ConfigService) => {
   const dbUrl = configService.get<string>('DATABASE_URL');
@@ -22,6 +23,7 @@ const PGUseFactoryConfig = async (configService: ConfigService) => {
     InteractionEntity,
     RefreshTokenEntity,
     BlacklistedTokenEntity,
+    WellKnownEntity,
   ];
 
   const dataSource = createDataSource(dbUrl, entities);

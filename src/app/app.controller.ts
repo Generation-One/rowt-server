@@ -18,10 +18,14 @@ import { readHtmlFile } from 'src/utils/readHtmlFile';
 import { getCountry } from 'src/utils/getCountry';
 import { generateMetaTags } from './app.model';
 import { CreateLinkDTO } from 'src/links/dto/createLink.dto';
+import { WellKnownService } from 'src/well-known/well-known.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly wellKnownService: WellKnownService,
+  ) {}
 
   private escapeHtml(unsafe: string): string {
     if (!unsafe) return '';
@@ -52,6 +56,33 @@ export class AppController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 100, ttl: 60000 } })
+  @Get('.well-known/:filename')
+  async getWellKnownFile(
+    @Param('filename') filename: string,
+    @Res() res: ExpressResponse,
+  ): Promise<void> {
+    try {
+      const file = await this.wellKnownService.getPublicFile(filename);
+
+      if (!file) {
+        res.status(404).json({ message: 'Well-known file not found' });
+        return;
+      }
+
+      // Set appropriate headers
+      res.setHeader('Content-Type', file.contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      res.send(file.content);
+    } catch (error) {
+      console.error('Error serving well-known file:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  @Public()
   @Get() // Base route returns a default help dialog
   getHello(@Res() res: ExpressResponse): void {
     const htmlContent = readHtmlFile('src/pages/help.html');
@@ -71,6 +102,18 @@ export class AppController {
   @Get('link')
   async RejectGet() {
     return readHtmlFile('src/pages/rejectGet.html');
+  }
+
+  @Get('admin')
+  getAdminDashboard(@Res() res: ExpressResponse): void {
+    const htmlContent = readHtmlFile('src/pages/admin-dashboard.html');
+    res.send(htmlContent);
+  }
+
+  @Get('admin/well-known')
+  getWellKnownAdmin(@Res() res: ExpressResponse): void {
+    const htmlContent = readHtmlFile('src/pages/well-known-admin.html');
+    res.send(htmlContent);
   }
 
   @Public()

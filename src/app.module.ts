@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { LinkModule } from './links/link.module';
 import { ProjectModule } from './projects/project.module';
 import { CleanupModule } from './cleanup/cleanup.module';
+import { WellKnownModule } from './well-known/well-known.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppService } from './app/app.service';
 import { UserEntity } from './users/user.entity';
@@ -13,6 +14,7 @@ import { LinkEntity } from './links/link.entity';
 import { InteractionEntity } from './links/interaction.entity';
 import { RefreshTokenEntity } from './auth/tokens/entities/refresh-token.entity';
 import { BlacklistedTokenEntity } from './auth/tokens/entities/blacklisted-token.entity';
+import { WellKnownEntity } from './well-known/well-known.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app/app.controller';
 import { AppRepositoryAdapter } from './app/app.repository.adapter';
@@ -35,6 +37,7 @@ import { getDatabaseConfig } from './database/DatabaseFactoryConfig';
     ProjectModule,
     LinkModule,
     CleanupModule,
+    WellKnownModule,
     TypeOrmModule.forFeature([
       LinkEntity,
       InteractionEntity,
@@ -42,6 +45,7 @@ import { getDatabaseConfig } from './database/DatabaseFactoryConfig';
       UserEntity,
       RefreshTokenEntity,
       BlacklistedTokenEntity,
+      WellKnownEntity,
     ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule], // Import the env path
