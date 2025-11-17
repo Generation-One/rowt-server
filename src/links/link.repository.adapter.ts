@@ -305,6 +305,7 @@ export class LinkRepositoryAdapter implements LinkRepositoryPort {
         ...(updateData.fallbackUrlOverride !== undefined && { fallbackUrlOverride: updateData.fallbackUrlOverride }),
         ...(updateData.additionalMetadata !== undefined && { additionalMetadata: updateData.additionalMetadata }),
         ...(updateData.properties !== undefined && { properties: updateData.properties }),
+        ...(updateData.isParameterized !== undefined && { isParameterized: updateData.isParameterized }),
       });
 
       // Return the updated link
