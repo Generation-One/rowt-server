@@ -157,16 +157,17 @@ export class AppController {
         })
         .catch((err) => console.error('Error logging interaction:', err));
 
+      // Detect platform (case-insensitive)
+      const userAgent = (request.headers['user-agent'] || '').toLowerCase();
+      const isIOS = /ipad|iphone|ipod/.test(userAgent);
+      const isAndroid = /android/.test(userAgent);
+
+      // Get the deep link URL to try opening the app
       const finalLink = this.appService.openAppOnUserDevice(
         link,
         request.headers['user-agent'],
         queryParams,
       );
-
-      // Detect platform and get appropriate fallback URL
-      const userAgent = request.headers['user-agent'] || '';
-      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-      const isAndroid = /Android/.test(userAgent);
 
       // Set up fallback URLs
       const regularFallback =
