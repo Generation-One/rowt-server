@@ -238,10 +238,6 @@ export class AppController {
               align-items: center;
               min-height: 100vh;
             }
-            .container {
-              max-width: 400px;
-              width: 100%;
-            }
             .loader {
               width: 40px;
               height: 40px;
@@ -257,107 +253,24 @@ export class AppController {
             .redirect-message {
               font-size: 18px;
               opacity: 0.7;
-              margin-bottom: 20px;
-            }
-            .content {
-              display: none;
-              padding: 20px;
-              background: white;
-              border-radius: 12px;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
-            .content.show {
-              display: block;
-            }
-            .open-app-btn {
-              display: inline-block;
-              padding: 14px 32px;
-              background: #007AFF;
-              color: white;
-              text-decoration: none;
-              border-radius: 8px;
-              font-size: 16px;
-              font-weight: 600;
-              margin-top: 20px;
-              cursor: pointer;
-              border: none;
-              transition: background 0.2s;
-            }
-            .open-app-btn:hover {
-              background: #0051D5;
-            }
-            .open-app-btn:active {
-              background: #004BB5;
-            }
-            h1 {
-              font-size: 24px;
-              margin: 0 0 10px 0;
-              color: #1d1d1f;
-            }
-            p {
-              font-size: 16px;
-              color: #6e6e73;
-              line-height: 1.5;
-              margin: 0 0 20px 0;
             }
           </style>
         </head>
         <body>
           <div class="container">
-            <div id="loading">
-              <div class="loader"></div>
-              <div class="redirect-message">Redirecting...</div>
-            </div>
-            <div id="content" class="content">
-              <h1>${metadata.title}</h1>
-              ${metadata.description ? `<p>${metadata.description}</p>` : ''}
-              <button class="open-app-btn" id="openAppBtn">Open in App</button>
-            </div>
+            <div class="loader"></div>
+            <div class="redirect-message">Redirecting...</div>
           </div>
 
           <script>
             // Check if we should do a direct redirect (for HTTPS URLs on mobile)
             const shouldDirectRedirect = ${shouldUseDirectRedirect};
             const directRedirectUrl = ${directRedirectUrl ? '"' + directRedirectUrl.replace(/"/g, '\\"') + '"' : 'null'};
-            const finalUrl = "${finalLink.replace(/"/g, '\\"')}";
-            const isIOS = ${isIOS};
-            const isAndroid = ${isAndroid};
-
-            // Function to show content page with "Open in App" button
-            function showContent() {
-              document.getElementById('loading').style.display = 'none';
-              document.getElementById('content').classList.add('show');
-            }
-
-            // Function to try opening the app
-            function openInApp() {
-              // For HTTPS URLs, we need to construct a deep link
-              // This should use the app's custom scheme if available
-              const deepLink = "${finalLink.replace(/"/g, '\\"')}";
-
-              // Try to open the app
-              window.location.href = deepLink;
-
-              // If app doesn't open after a delay, could show a message
-              // but for now we just attempt the deep link
-            }
-
-            // Set up the "Open in App" button
-            document.getElementById('openAppBtn').addEventListener('click', openInApp);
 
             if (shouldDirectRedirect && directRedirectUrl) {
-              // For HTTPS URLs on mobile:
-              // 1. Show content page immediately
-              // 2. Try to open App Store
-              // 3. When user comes back, they see the content with "Open in App" button
-
-              // Show content immediately
-              showContent();
-
-              // Try to open App Store after a brief moment
-              setTimeout(function() {
-                window.location.href = directRedirectUrl;
-              }, 100);
+              // For HTTPS URLs on mobile: redirect directly to App Store/Play Store
+              // This uses window.location.href so iOS/Android can intercept and open the store app
+              window.location.href = directRedirectUrl;
             } else {
               // For custom deep links: use timeout-based detection
 
