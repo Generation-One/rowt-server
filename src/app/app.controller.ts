@@ -319,8 +319,8 @@ export class AppController {
                     // Navigate to Play Store if on Android and play store ID is available
                     window.location.href = playStoreUrl;
                   } else {
-                    // Use regular fallback if no store URL is available
-                    window.location.href = regularFallback;
+                    // Desktop/Windows or no store configured: redirect to the actual link URL
+                    window.location.href = deepLink;
                   }
                 }
               }
