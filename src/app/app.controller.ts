@@ -162,7 +162,10 @@ export class AppController {
       const isIOS = /ipad|iphone|ipod/.test(userAgent);
       const isAndroid = /android/.test(userAgent);
 
-      // Get the deep link URL to try opening the app
+      // Check if this is an HTTP(S) URL or a deep link
+      const isHttpUrl = link.url.includes('http://') || link.url.includes('https://');
+
+      // Get the final URL (with parameters substituted)
       const finalLink = this.appService.openAppOnUserDevice(
         link,
         request.headers['user-agent'],
@@ -171,7 +174,7 @@ export class AppController {
 
       // Set up fallback URLs
       const regularFallback =
-        link.fallbackUrlOverride || link.project.fallbackUrl || './error';
+        link.fallbackUrlOverride || link.project.fallbackUrl || finalLink;
 
       // Determine store URLs if available
       let appStoreUrl: string | null = null;
@@ -185,6 +188,22 @@ export class AppController {
         playStoreUrl = `https://play.google.com/store/apps/details?id=${this.escapeHtml(link.project.playstoreId)}`;
       }
 
+      // Determine what to do based on URL type and platform
+      let shouldUseDirectRedirect = false;
+      let directRedirectUrl: string | null = null;
+
+      // For HTTP(S) URLs on mobile with app stores configured, redirect directly to store
+      // (Universal Links/App Links will handle opening the app if installed)
+      if (isHttpUrl) {
+        if (isIOS && appStoreUrl) {
+          shouldUseDirectRedirect = true;
+          directRedirectUrl = appStoreUrl;
+        } else if (isAndroid && playStoreUrl) {
+          shouldUseDirectRedirect = true;
+          directRedirectUrl = playStoreUrl;
+        }
+      }
+
       // Generate metadata for the link - PROPERLY ESCAPED
       const metadata = {
         title: this.escapeHtml(link.title || 'Redirecting...'),
@@ -192,7 +211,7 @@ export class AppController {
         imageUrl: this.escapeHtml(link.imageUrl || ''),
       };
 
-      // Return a minimalist redirect page with simple automatic fallback
+      // Return a redirect page
       return response.status(200).set('Content-Type', 'text/html').send(`
         <!DOCTYPE html>
         <html>
@@ -242,64 +261,81 @@ export class AppController {
             <div class="loader"></div>
             <div class="redirect-message">Redirecting...</div>
           </div>
-          
-          <script>
-            // Variables to track app opening status
-            let appOpened = false;
-            let pageHidden = false;
-            
-            // Track page visibility changes
-            document.addEventListener('visibilitychange', function() {
-              if (document.hidden) {
-                pageHidden = true;
-                appOpened = true;
-              }
-            });
-            
-            // Platform detection
-            const isIOS = ${isIOS};
-            const isAndroid = ${isAndroid};
-            
-            // Deep link to try to open the app
-            const deepLink = "${finalLink.replace(/"/g, '\\"')}";
 
-            // Fallback URLs
-            const regularFallback = "${regularFallback.replace(/"/g, '\\"')}";
-            const appStoreUrl = ${appStoreUrl ? '"' + appStoreUrl.replace(/"/g, '\\"') + '"' : 'null'};
-            const playStoreUrl = ${playStoreUrl ? '"' + playStoreUrl.replace(/"/g, '\\"') + '"' : 'null'};
-            
-            // Try to open the app
-            function openApp() {
-              window.location.href = deepLink;
-            }
-            
-            // Function to handle fallback based on platform
-            function handleFallback() {
-              if (!pageHidden) {
-                // App didn't open, so use the appropriate fallback
-                if (isIOS && appStoreUrl) {
-                  // Navigate to App Store if on iOS and app store ID is available
-                  window.location.href = appStoreUrl;
-                } else if (isAndroid && playStoreUrl) {
-                  // Navigate to Play Store if on Android and play store ID is available
-                  window.location.href = playStoreUrl;
-                } else {
-                  // Use regular fallback if no store URL is available
-                  window.location.href = regularFallback;
+          <script>
+            // Check if we should do a direct redirect (for HTTPS URLs on mobile)
+            const shouldDirectRedirect = ${shouldUseDirectRedirect};
+            const directRedirectUrl = ${directRedirectUrl ? '"' + directRedirectUrl.replace(/"/g, '\\"') + '"' : 'null'};
+
+            if (shouldDirectRedirect && directRedirectUrl) {
+              // For HTTPS URLs on mobile: redirect directly to App Store/Play Store
+              // This uses window.location.href so iOS/Android can intercept and open the store app
+              window.location.href = directRedirectUrl;
+            } else {
+              // For custom deep links: use timeout-based detection
+
+              // Variables to track app opening status
+              let appOpened = false;
+              let pageHidden = false;
+
+              // Track page visibility changes
+              document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                  pageHidden = true;
+                  appOpened = true;
+                }
+              });
+
+              // Track page blur
+              window.addEventListener('blur', function() {
+                appOpened = true;
+              });
+
+              // Platform detection
+              const isIOS = ${isIOS};
+              const isAndroid = ${isAndroid};
+
+              // Deep link to try to open the app
+              const deepLink = "${finalLink.replace(/"/g, '\\"')}";
+
+              // Fallback URLs
+              const regularFallback = "${regularFallback.replace(/"/g, '\\"')}";
+              const appStoreUrl = ${appStoreUrl ? '"' + appStoreUrl.replace(/"/g, '\\"') + '"' : 'null'};
+              const playStoreUrl = ${playStoreUrl ? '"' + playStoreUrl.replace(/"/g, '\\"') + '"' : 'null'};
+
+              // Try to open the app
+              function openApp() {
+                window.location.href = deepLink;
+              }
+
+              // Function to handle fallback based on platform
+              function handleFallback() {
+                if (!appOpened && !pageHidden) {
+                  // App didn't open, so use the appropriate fallback
+                  if (isIOS && appStoreUrl) {
+                    // Navigate to App Store if on iOS and app store ID is available
+                    window.location.href = appStoreUrl;
+                  } else if (isAndroid && playStoreUrl) {
+                    // Navigate to Play Store if on Android and play store ID is available
+                    window.location.href = playStoreUrl;
+                  } else {
+                    // Use regular fallback if no store URL is available
+                    window.location.href = regularFallback;
+                  }
                 }
               }
-            }
-            
-            // Open the app immediately
-            openApp();
-            
-            // Set appropriate timeout based on platform
-            if (isIOS) {
-              setTimeout(handleFallback, 2000);
-            } else if (isAndroid) {
-              setTimeout(handleFallback, 1500);
-            } else {
-              setTimeout(handleFallback, 1000);
+
+              // Open the app immediately
+              openApp();
+
+              // Set appropriate timeout based on platform
+              if (isIOS) {
+                setTimeout(handleFallback, 2000);
+              } else if (isAndroid) {
+                setTimeout(handleFallback, 1500);
+              } else {
+                setTimeout(handleFallback, 1000);
+              }
             }
           </script>
         </body>
