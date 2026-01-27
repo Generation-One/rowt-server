@@ -2,7 +2,7 @@
 
 ## Project Memory
 
-This project uses Mai's memory system to track coding sessions. At the end of every session, save a summary using the `save_project_memory` MCP tool.
+If you have the `save_project_memory` MCP tool available, save a summary at the end of every coding session.
 
 ### How to save
 
@@ -40,4 +40,4 @@ What was done, 2-4 paragraphs.
 - When switching to a different area of the codebase
 
 ### Reading context
-Use `read_project_memory` to check what's already been recorded before starting work. This helps you understand recent changes and decisions.
+Use `read_project_memory` (if available) to check what's already been recorded before starting work. This helps you understand recent changes and decisions.
